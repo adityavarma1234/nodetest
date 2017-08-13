@@ -1,0 +1,109 @@
+<html><head>
+  <meta charset="UTF-8">
+
+
+  <link rel="stylesheet prefetch" href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.0.0-alpha/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.10.15/css/dataTables.bootstrap.min.css">
+  <link  rel="stylesheet" href="maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+
+  <script>
+  window.console = window.console || function(t) {};
+</script><style type="text/css">:root .ad
+{display:none !important;}</style>
+
+
+
+  <script>
+  if (document.location.search.match(/type=embed/gi)) {
+    window.parent.postMessage("resize", "*");
+  }
+</script>
+
+</head>
+
+<body translate="no">
+
+  <div class="container">
+
+    <!-- Search controls -->
+    <h1>Search Github Issuess</h1>
+    <div class="form-group">
+        <label for="search-box">
+          Owner/Issue:
+        </label>
+        <input id="search-box" type="text" class="form-control">
+    </div>
+    <button id="search-button" class="btn btn-primary">
+        Search
+    </button>
+    <hr>
+    <div class="container">
+  <table class="table table-striped table-bordered" cellspacing="0" width="100%" id="results_table">
+    <thead>
+      <tr>
+        <th>Title</th>
+        <th>State</th>
+        <th>Reported By</th>
+        <th>Link</th>
+      </tr>
+    </thead>
+    <tbody id="body">
+    </tbody>
+  </table>
+</div>
+
+    <!-- Search result -->
+    <a href="" target="_blank" id="search-result" style="display:none;">
+        <h2 id="search-result__login"></h2>
+        <img src="" alt="avatar" width="150px" height="150px" id="search-result__avatar">
+    </a>
+
+    <!-- Error message -->
+    <div id="error" class="well" style="display:none;">
+        <p id="error__message">
+        </p>
+    </div>
+</div>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.1.1/jquery.min.js"></script>
+  <script src="https://cdn.datatables.net/1.10.15/js/jquery.dataTables.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/4.1.0/rx.all.min.js"></script>
+
+    <script>
+    "use strict";
+$("#results_table").hide();
+var userClicksSearchButton = Rx.Observable.fromEvent($("#search-button"), 'click').map(function (event) {
+    return $("#search-box").val();
+});
+
+userClicksSearchButton.flatMap(function (searchTerm) {
+    return Rx.Observable.fromPromise($.get('https://api.github.com/repos/' + searchTerm + '/issues')).catch(function (response) {
+        renderError(response.statusText);
+        return Rx.Observable.empty();
+    });
+}).subscribe(function (response) {
+    renderUser(response);
+});
+
+function renderUser(response) {
+  $('#body').empty();
+  var tbody = $('#body');
+  for (var i = 0; i < response.length; i++) {
+      var tr = $('<tr/>').appendTo(tbody);
+          tr.append('<td>' + response[i].title + '</td>');
+          tr.append('<td>' + response[i].state + '</td>');
+          tr.append('<td>' + '<a href=  '+ response[i].user.html_url  + '>' + response[i].user.login + '</a>' + '</td>');
+          tr.append('<td>' + '<a href=  '+ response[i].html_url  + '>Issue</a>' + '</td>');
+  }
+  $("#results_table").show();
+  $("#results_table").DataTable();
+  $("#error").hide();
+}
+
+function renderError(message) {
+    $('#results_table').hide();
+    $("#search-result").hide();
+    $("#error").show();
+    $("#error__message").text(message);
+}
+  </script>
+ </body></html>
